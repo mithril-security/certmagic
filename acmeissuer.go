@@ -95,6 +95,12 @@ type ACMEIssuer struct {
 	// as to cancel challenges too early.
 	CertObtainTimeout time.Duration
 
+	// The validity period to ask the CA to issue a certificate for.
+	// Default: 0 (don't ask a custom lifetime to the CA)
+	// This value is used to compute the "notAfter" field of the ACME order,
+	// therefore the system must have a reasonably synchronized clock.
+	ValidityPeriod time.Duration
+
 	// Address of custom DNS resolver to be used
 	// when communicating with ACME server
 	Resolver string
@@ -393,7 +399,7 @@ func (am *ACMEIssuer) doIssue(ctx context.Context, csr *x509.CertificateRequest,
 		}
 	}
 
-	certChains, err := client.acmeClient.ObtainCertificateUsingCSR(ctx, client.account, csr)
+	certChains, err := client.acmeClient.ObtainCertificateUsingCSR(ctx, client.account, csr, am.ValidityPeriod)
 	if err != nil {
 		return nil, usingTestCA, fmt.Errorf("%v %w (ca=%s)", nameSet, err, client.acmeClient.Directory)
 	}
